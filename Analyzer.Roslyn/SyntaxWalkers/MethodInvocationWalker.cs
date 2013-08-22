@@ -24,21 +24,14 @@ namespace Analyzer.Roslyn.SyntaxWalkers
             try
             {
                 var target = _semanticModel.GetSymbolInfo(node.Expression);
-                Console.WriteLine("Target = {0}:{1}:{2}", target.Symbol.ContainingAssembly.Name, target.Symbol.ContainingType.ToString(), target.Symbol.Name);
 
                 var parent = node.Ancestors().First(x => x is ClassDeclarationSyntax || x is MethodDeclarationSyntax);
                 if (parent is ClassDeclarationSyntax)
                 {
                     var source = _semanticModel.GetDeclaredSymbol(parent);
-                    Console.WriteLine("Source = {0}:{1}:{2}", source.ContainingAssembly.Name, source.ContainingNamespace.Name, source.Name);
                 }
                 else
-                {
                     CreateMethodInvokesMethodRelationship(_semanticModel.GetDeclaredSymbol(parent), target.Symbol);
-                    if (target.Symbol.Name == "SetCommandType")
-                    {
-                    }
-                }
 
             }
             catch (Exception ex)
@@ -67,11 +60,11 @@ namespace Analyzer.Roslyn.SyntaxWalkers
 
         private void CreateMethodInvokesMethodRelationship(ISymbol source, ISymbol target)
         {
-            //var sourceNode = GetMethodNode(source);
-            //var targetNode = GetMethodNode(target);
+            var sourceNode = GetMethodNode(source);
+            var targetNode = GetMethodNode(target);
 
-            //if ((sourceNode != null) && (targetNode != null))
-            //    _graphClient.CreateRelationship(sourceNode.Reference, new MethodInvokesMethod(targetNode.Reference));
+            if ((sourceNode != null) && (targetNode != null))
+                _graphClient.CreateRelationship(sourceNode.Reference, new MethodInvokesMethod(targetNode.Reference));
 
         }
     }

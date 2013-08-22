@@ -30,6 +30,7 @@ namespace Analyzer.Roslyn.SyntaxWalkers
                 var memberAccess = (MemberAccessExpressionSyntax)node.Left;
                 if (memberAccess.Name.Identifier.ValueText == "CommandText")
                 {
+                    /// TODO: Cover where node.Right is a reference to a constant field
                     if (node.Right is LiteralExpressionSyntax)
                     {
                         var literalExpression = (LiteralExpressionSyntax)node.Right;

@@ -13,5 +13,7 @@ namespace Analyzer.Model.Nodes
         public string Name { get; set; }
 
         public string Type { get; set; }
+
+        public bool IsStub { get; set; }
     }
 }

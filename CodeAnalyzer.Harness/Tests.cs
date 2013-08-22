@@ -66,6 +66,25 @@ namespace CodeAnalyzer.Harness
         }
 
         [Test]
+        public void VisitDatabaseServersForDependencies()
+        {
+            var databaseVisitor = new StoredProcedureDependencyVisitor(client);
+
+            databaseVisitor.Visit(@"C:\Echo Development\Analyzer Artifacts\DACPAC\API_DB.PROD.dacpac");
+            databaseVisitor.Visit(@"C:\Echo Development\Analyzer Artifacts\DACPAC\CarrierCapacity.PROD.dacpac");
+            databaseVisitor.Visit(@"C:\Echo Development\Analyzer Artifacts\DACPAC\EchoLogin2.PROD.dacpac");
+            databaseVisitor.Visit(@"C:\Echo Development\Analyzer Artifacts\DACPAC\EchoOptimizer.PROD.dacpac");
+            databaseVisitor.Visit(@"C:\Echo Development\Analyzer Artifacts\DACPAC\EchoOptimizerImages.PROD.dacpac");
+            databaseVisitor.Visit(@"C:\Echo Development\Analyzer Artifacts\DACPAC\EchoQuote.PROD.dacpac");
+            databaseVisitor.Visit(@"C:\Echo Development\Analyzer Artifacts\DACPAC\EDIStaging.PROD.dacpac");
+            databaseVisitor.Visit(@"C:\Echo Development\Analyzer Artifacts\DACPAC\RateIQ.PROD.dacpac");
+            databaseVisitor.Visit(@"C:\Echo Development\Analyzer Artifacts\DACPAC\RateIQ2.PROD.dacpac");
+            databaseVisitor.Visit(@"C:\Echo Development\Analyzer Artifacts\DACPAC\SearchRepository.PROD.dacpac");
+
+            databaseVisitor.Visit(@"C:\Echo Development\Analyzer Artifacts\DACPAC\EchoOptimizer.DB02.PROD.dacpac");
+        }
+
+        [Test]
         public void VisitReportServer()
         {
             var reportServer = new ReportServer
@@ -98,6 +117,19 @@ namespace CodeAnalyzer.Harness
                 Console.WriteLine(assembly.FullName);
                 var assemblyNode = assemblyVisitor.Visit(assembly.FullName);
                 client.CreateRelationship(client.RootNode, new RootContainsAssembly(assemblyNode));
+            }
+        }
+
+        [Test]
+        public void VisitAssembliesInDirectoryAssemblyDependency()
+        {
+            var directory = new DirectoryInfo(@"C:\Echo Development\Analyzer Artifacts\Assemblies");
+            var assemblyVisitor = new AssemblyDependencyVisitor(client);
+
+            foreach (var assembly in directory.EnumerateFiles("*.dll"))
+            {
+                Console.WriteLine(assembly.FullName);
+                assemblyVisitor.Visit(assembly.FullName);
             }
         }
 

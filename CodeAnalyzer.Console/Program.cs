@@ -41,9 +41,9 @@ namespace CodeAnalyzer.Console
             var client = new GraphClient(new Uri("http://localhost:7474/db/data"));
             client.Connect();
 
-            FindMethodInvocationLinks(client);
+            //FindMethodInvocationLinks(client);
 
-            //PrintRelationshipTree(new HttpClient(), "http://localhost:7474/db/data/node/0", 0, new List<string>());
+            PrintRelationshipTree(new HttpClient(), "http://localhost:7474/db/data/node/0", 0, new List<string>());
 
             System.Console.WriteLine("*** DONE ***");
             //System.Console.ReadLine();
@@ -51,15 +51,18 @@ namespace CodeAnalyzer.Console
 
         static void FindMethodInvocationLinks(GraphClient client)
         {
-            var project = Solution.LoadStandAloneProject(@"C:\Echo Development\Echo.Optimizer.BusinessLayer.Trunk.Export\OptimizerBusinessLayer.csproj");
-            var searchPaths = ReadOnlyArray.OneOrZero(@"C:\Echo Development\BusinessLayer References");
+            var project = Solution.LoadStandAloneProject(@"C:\Echo Development\Analyzer Artifacts\Code\Echo.Optimizer.WebUI.Trunk\Echo.Optimizer.WebUI.csproj");
+            var searchPaths = ReadOnlyArray.OneOrZero((string)null);
             var fileResolver = new FileResolver(searchPaths, searchPaths, null, arch => true, CultureInfo.CurrentCulture);
             project = project.UpdateFileResolver(fileResolver);
             var compilation = project.GetCompilation();
             foreach (var tree in compilation.SyntaxTrees)
             {
-                var newWalker = new MethodInvokesStoredProcedureWalker(client, compilation.GetSemanticModel(tree));
-                newWalker.Visit(tree.GetRoot() as SyntaxNode);
+                var methodInvocationWalker = new MethodInvocationWalker(client, compilation.GetSemanticModel(tree));
+                methodInvocationWalker.Visit(tree.GetRoot() as SyntaxNode);
+
+                var methodInvokedStoredProcedureWalker = new MethodInvokesStoredProcedureWalker(client, compilation.GetSemanticModel(tree));
+                methodInvokedStoredProcedureWalker.Visit(tree.GetRoot() as SyntaxNode);
             }
         }
 

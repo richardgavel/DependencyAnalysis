@@ -3,11 +3,11 @@ using Neo4jClient;
 
 namespace Analyzer.Model.Relationships
 {
-    public class InterfaceContainsMethod : Relationship, IRelationshipAllowingSourceNode<Interface>, IRelationshipAllowingTargetNode<Method>
+    public class InterfaceContainsProperty : Relationship, IRelationshipAllowingSourceNode<Interface>, IRelationshipAllowingTargetNode<Property>
     {
-        public const string TypeKey = "INTERFACE_CONTAINS_METHOD";
+        public const string TypeKey = "INTERFACE_CONTAINS_PROPERTY";
 
-        public InterfaceContainsMethod(NodeReference property)
+        public InterfaceContainsProperty(NodeReference property)
             : base(property)
         {
         }

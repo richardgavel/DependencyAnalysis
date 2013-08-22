@@ -17,6 +17,17 @@ namespace Analyzer.Database.Visitors
             _graphClient = graphClient;
         }
 
+        public void Visit(string databasePackagePath)
+        {
+            var model = new TSqlModel(databasePackagePath);
+
+            var storedProcedureDependencyVisitor = new StoredProcedureDependencyVisitor(_graphClient);
+            foreach (var storedProcedure in model.GetObjects(DacQueryScopes.All, ModelSchema.Procedure))
+            {
+                storedProcedureDependencyVisitor.Visit(storedProcedure);
+            }
+        }
+
         public void Visit(TSqlObject storedProcedure)
         {
             var storedProcedureNode = GetStoredProcedureNode(storedProcedure);

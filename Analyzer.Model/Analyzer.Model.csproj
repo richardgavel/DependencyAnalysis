@@ -84,6 +84,7 @@
     <Compile Include="Relationships\ClassImplementsInterface.cs" />
     <Compile Include="Relationships\ClassReferencesStoredProcedure.cs" />
     <Compile Include="Relationships\AssemblyReferencesAssembly.cs" />
+    <Compile Include="Relationships\TableReplicatesToTable.cs" />
     <Compile Include="Relationships\MethodInvokesStoredProcedure.cs" />
     <Compile Include="Relationships\MethodInvokesMethod.cs" />
     <Compile Include="Relationships\ReportReferencesTable.cs" />
