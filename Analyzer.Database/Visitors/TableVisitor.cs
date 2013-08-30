@@ -7,26 +7,26 @@ namespace Analyzer.Database.Visitors
 {
     public class TableVisitor
     {
-        private GraphClient client;
+        private readonly GraphClient _graphClient;
 
-        public TableVisitor(GraphClient client)
+        public TableVisitor(GraphClient graphClient)
         {
-            this.client = client;
+            _graphClient = graphClient;
         }
 
         public NodeReference Visit(TSqlObject table)
         {
-            var tableNode = client.Create(new Nodes.Table
+            var tableNode = _graphClient.Create(new Nodes.Table
             {
                 Id = table.Name.ToString(),
                 Name = table.Name.ToString()
             });
 
-            var columnVisitor = new ColumnVisitor(client);
+            var columnVisitor = new ColumnVisitor(_graphClient);
             foreach (var column in table.GetChildren())
             {
                 var columnNode = columnVisitor.Visit(column);
-                client.CreateRelationship(tableNode, new TableContainsColumn(columnNode));
+                _graphClient.CreateRelationship(tableNode, new TableContainsColumn(columnNode));
             }
 
             return tableNode;

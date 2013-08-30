@@ -6,16 +6,16 @@ namespace Analyzer.Database.Visitors
 {
     public class ColumnVisitor
     {
-        private GraphClient client;
+        private readonly GraphClient _graphClient;
 
-        public ColumnVisitor(GraphClient client)
+        public ColumnVisitor(GraphClient graphClient)
         {
-            this.client = client;
+            _graphClient = graphClient;
         }
     
         public NodeReference Visit(TSqlObject column)
         {
-            var columnNode = client.Create(new Nodes.Column
+            var columnNode = _graphClient.Create(new Nodes.Column
             {
                 Id = column.Name.ToString(),
                 Name = column.Name.ToString()
