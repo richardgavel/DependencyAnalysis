@@ -1,16 +1,17 @@
-﻿using Analyzer.Model.Relationships;
+﻿using System.IO;
+using Analyzer.Model.Relationships;
 using Microsoft.SqlServer.Dac.Model;
 using Neo4jClient;
-using Neo4jClient.Cypher;
 using System;
 using System.Linq;
+using Neo4jClient.Cypher;
 using Nodes = Analyzer.Model.Nodes;
 
 namespace Analyzer.Database.Visitors
 {
     public class StoredProcedureDependencyVisitor
     {
-        private GraphClient _graphClient;
+        private readonly GraphClient _graphClient;
 
         public StoredProcedureDependencyVisitor(GraphClient graphClient)
         {
@@ -20,26 +21,43 @@ namespace Analyzer.Database.Visitors
         public void Visit(string databasePackagePath)
         {
             var model = new TSqlModel(databasePackagePath);
+            var databaseNode = GetDatabaseNode(databasePackagePath);
 
-            var storedProcedureDependencyVisitor = new StoredProcedureDependencyVisitor(_graphClient);
             foreach (var storedProcedure in model.GetObjects(DacQueryScopes.All, ModelSchema.Procedure))
-            {
-                storedProcedureDependencyVisitor.Visit(storedProcedure);
-            }
+                Visit(databaseNode, storedProcedure);
         }
 
-        public void Visit(TSqlObject storedProcedure)
+        public void Visit(Node<Nodes.Database> databaseNode, TSqlObject storedProcedure)
         {
-            var storedProcedureNode = GetStoredProcedureNode(storedProcedure);
+            var storedProcedureNode = GetStoredProcedureNode(databaseNode, storedProcedure);
+
+            foreach (var table in storedProcedure.GetReferenced().Where(x => x.ObjectType == ModelSchema.Table))
+            {
+                try
+                {
+                    var tableNode = GetTableNode(databaseNode, table);
+
+                    if ((storedProcedureNode == null) || (tableNode == null)) continue;
+
+                    Console.WriteLine("Discovered dependency between stored procedure {0} and tableNode {1}", storedProcedureNode.Data.Id, tableNode.Data.Id);
+                    _graphClient.CreateRelationship(storedProcedureNode.Reference, new StoredProcedureReferencesTable(tableNode.Reference));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
+            }
 
             foreach (var column in storedProcedure.GetReferenced().Where(x => x.ObjectType == ModelSchema.Column))
             {
                 try
                 {
-                    var columnNode = GetColumnNode(column);
+                    var columnNode = GetColumnNode(databaseNode, column);
 
-                    if ((storedProcedureNode != null) && (columnNode != null))
-                        _graphClient.CreateRelationship(storedProcedureNode.Reference, new StoredProcedureReferencesColumn(columnNode.Reference));
+                    if ((storedProcedureNode == null) || (columnNode == null)) continue;
+
+                    Console.WriteLine("Discovered dependency between stored procedure {0} and column {1}", storedProcedureNode.Data.Id, columnNode.Data.Id);
+                    _graphClient.CreateRelationship(storedProcedureNode.Reference, new StoredProcedureReferencesColumn(columnNode.Reference));
                 }
                 catch (Exception ex)
                 {
@@ -48,36 +66,65 @@ namespace Analyzer.Database.Visitors
             }
         }
 
-        private Node<Nodes.Column> GetColumnNode(TSqlObject column)
+        private Node<Nodes.Database> GetDatabaseNode(string databasePackagePath)
         {
+            var databasePackageName = Path.GetFileNameWithoutExtension(databasePackagePath);
+
             var query = _graphClient.Cypher
                 .Start(new { root = _graphClient.RootNode })
-                .Match("root-[:ROOT_CONTAINS_DATABASESERVER]->databaseserver-[:DATABASESERVER_CONTAINS_DATABASE]->database-[:DATABASE_CONTAINS_TABLE]->table-[:TABLE_CONTAINS_COLUMN]->column")
-                .Where(string.Format("table.Id='{0}' AND column.Id='{1}'", column.GetParent().Name, column.Name))
+                .Match("root-[:ROOT_CONTAINS_DATABASESERVER]->databaseserver-[:DATABASESERVER_CONTAINS_DATABASE]->database")
+                .Where((Nodes.Database database) => database.Id == databasePackageName)
+                .Return<Node<Nodes.Database>>("database");
+
+            var results = query.Results.ToList();
+
+            return results.Count == 1 ? results.First() : null;
+        }
+
+        private Node<Nodes.Table> GetTableNode(Node<Nodes.Database> databaseNode, TSqlObject sqlTable)
+        {
+            var tableName = sqlTable.Name.ToString();
+
+            var query = _graphClient.Cypher
+                .Start(new { database = databaseNode.Reference })
+                .Match("database-[:DATABASE_CONTAINS_TABLE]->table")
+                .Where((Nodes.Table table) => table.Id == tableName)
+                .Return<Node<Nodes.Table>>("table");
+
+            var results = query.Results.ToList();
+
+            return results.Count == 1 ? results.First() : null;
+        }
+
+        private Node<Nodes.Column> GetColumnNode(Node<Nodes.Database> databaseNode, TSqlObject sqlColumn)
+        {
+            var tableName = sqlColumn.GetParent().Name.ToString();
+            var columnName = sqlColumn.Name.ToString();
+
+            var query = _graphClient.Cypher
+                .Start(new { database = databaseNode.Reference })
+                .Match("database-[:DATABASE_CONTAINS_TABLE]->table-[:TABLE_CONTAINS_COLUMN]->column")
+                .Where((Nodes.Table table, Nodes.Column column) => table.Id == tableName && column.Id == columnName)
                 .Return<Node<Nodes.Column>>("column");
 
             var results = query.Results.ToList();
 
-            if (results.Count() == 1)
-                return results.First();
-            else
-                return null;
+            return results.Count == 1 ? results.First() : null;
         }
 
-        private Node<Nodes.StoredProcedure> GetStoredProcedureNode(TSqlObject storedProcedure)
+        private Node<Nodes.StoredProcedure> GetStoredProcedureNode(Node<Nodes.Database> databaseNode, TSqlObject sqlStoredProcedure)
         {
+            var storedProcedureName = sqlStoredProcedure.Name.ToString();
+
             var query = _graphClient.Cypher
-                .Start(new { root = _graphClient.RootNode })
-                .Match("root-[:ROOT_CONTAINS_DATABASESERVER]->databaseserver-[:DATABASESERVER_CONTAINS_DATABASE]->database-[:DATABASE_CONTAINS_STOREDPROCEDURE]->storedprocedure")
-                .Where(string.Format("storedprocedure.Id='{0}'", storedProcedure.Name))
+                .Start(new { database = databaseNode.Reference })
+                .Match("database-[:DATABASE_CONTAINS_STOREDPROCEDURE]->storedprocedure")
+                .Where((Nodes.StoredProcedure storedprocedure) => storedprocedure.Id == storedProcedureName)
                 .Return<Node<Nodes.StoredProcedure>>("storedprocedure");
 
             var results = query.Results.ToList();
 
-            if (results.Count() == 1)
-                return results.First();
-            else
-                return null;
+            return results.Count == 1 ? results.First() : null;
         }
 }
 }

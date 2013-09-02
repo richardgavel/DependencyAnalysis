@@ -43,7 +43,7 @@ namespace Analyzer.Reports.Visitors
 
                 var results = storedProcedureQuery.Results.ToList();
 
-                if (results.Count() == 1)
+                if (results.Count == 1)
                     _graphClient.CreateRelationship(reportNode, new ReportInvokesStoredProcedure(results.First().Reference));
             }
 

@@ -3,7 +3,7 @@ using Neo4jClient;
 
 namespace Analyzer.Model.Relationships
 {
-    public class MethodInvokesMethod : Relationship, IRelationshipAllowingSourceNode<Method>, IRelationshipAllowingTargetNode<Method>
+    public class MethodInvokesMethod : AbstractReferencesRelationship, IRelationshipAllowingSourceNode<Method>, IRelationshipAllowingTargetNode<Method>
     {
         public const string TypeKey = "METHOD_INVOKES_METHOD";
 

@@ -3,7 +3,7 @@ using Neo4jClient;
 
 namespace Analyzer.Model.Relationships
 {
-    public class DatabaseContainsStoredProcedure : Relationship, IRelationshipAllowingSourceNode<Database>, IRelationshipAllowingTargetNode<StoredProcedure>
+    public class DatabaseContainsStoredProcedure : AbstractContainsRelationship, IRelationshipAllowingSourceNode<Database>, IRelationshipAllowingTargetNode<StoredProcedure>
     {
         public const string TypeKey = "DATABASE_CONTAINS_STOREDPROCEDURE";
 

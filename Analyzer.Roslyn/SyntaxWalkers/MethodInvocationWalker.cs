@@ -10,8 +10,8 @@ namespace Analyzer.Roslyn.SyntaxWalkers
 {
     public class MethodInvocationWalker : SyntaxWalker
     {
-        private GraphClient _graphClient;
-        private ISemanticModel _semanticModel;
+        private readonly GraphClient _graphClient;
+        private readonly ISemanticModel _semanticModel;
 
         public MethodInvocationWalker(GraphClient graphClient, ISemanticModel semanticModel)
         {
@@ -28,10 +28,13 @@ namespace Analyzer.Roslyn.SyntaxWalkers
                 var parent = node.Ancestors().First(x => x is ClassDeclarationSyntax || x is MethodDeclarationSyntax);
                 if (parent is ClassDeclarationSyntax)
                 {
-                    var source = _semanticModel.GetDeclaredSymbol(parent);
+                    //_semanticModel.GetDeclaredSymbol(parent);
                 }
                 else
-                    CreateMethodInvokesMethodRelationship(_semanticModel.GetDeclaredSymbol(parent), target.Symbol);
+                {
+                    var source = _semanticModel.GetDeclaredSymbol(parent);
+                    CreateMethodInvokesMethodRelationship(source, target.Symbol);
+                }
 
             }
             catch (Exception ex)
@@ -47,15 +50,12 @@ namespace Analyzer.Roslyn.SyntaxWalkers
             var query = _graphClient.Cypher
                 .Start(new { root = _graphClient.RootNode })
                 .Match("root-[:ROOT_CONTAINS_ASSEMBLY]->assembly-[:ASSEMBLY_CONTAINS_CLASS]->class-[:CLASS_CONTAINS_METHOD]->method")
-                .Where(string.Format("class.Id='{0}' AND method.Id='{1}'", symbol.ContainingType.ToString(), symbol.Name))
+                .Where(string.Format("class.Id='{0}' AND method.Id='{1}'", symbol.ContainingType, symbol.Name))
                 .Return<Node<Method>>("method");
 
             var results = query.Results.ToList();
 
-            if (results.Count() == 1)
-                return results.First();
-            else
-                return null;
+            return results.Count() == 1 ? results.First() : null;
         }
 
         private void CreateMethodInvokesMethodRelationship(ISymbol source, ISymbol target)
@@ -64,7 +64,10 @@ namespace Analyzer.Roslyn.SyntaxWalkers
             var targetNode = GetMethodNode(target);
 
             if ((sourceNode != null) && (targetNode != null))
+            {
+                Console.WriteLine("Discovered dependendency between {0} and {1}", sourceNode.Data.Id, targetNode.Data.Id);
                 _graphClient.CreateRelationship(sourceNode.Reference, new MethodInvokesMethod(targetNode.Reference));
+            }
 
         }
     }

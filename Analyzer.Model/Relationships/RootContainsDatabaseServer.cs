@@ -3,7 +3,7 @@ using Neo4jClient;
 
 namespace Analyzer.Model.Relationships
 {
-    public class RootContainsDatabaseServer : Relationship, IRelationshipAllowingSourceNode<RootNode>, IRelationshipAllowingTargetNode<DatabaseServer>
+    public class RootContainsDatabaseServer : AbstractContainsRelationship, IRelationshipAllowingSourceNode<RootNode>, IRelationshipAllowingTargetNode<DatabaseServer>
     {
         public const string TypeKey = "ROOT_CONTAINS_DATABASESERVER";
 

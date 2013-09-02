@@ -1,0 +1,30 @@
+﻿<div>
+    <img style="align-content: center; width: 100px" src="~/Content/EchoCodeWeb.png" />
+    <h1 class="title">Echo Code Web</h1>
+</div>
+
+<div>
+    <input style="width: 500px" />
+</div>
+
+<div>
+    <button>Search</button>
+</div>
+
+<h2 class="category">Results</h2>
+
+<div data-bind="foreach: $data">
+    <a data-bind="attr: { href: '/Details/Index/' + Id }"><span data-bind="text: Type + ' : ' + Name" /></a><br />
+</div>
+
+
+@section Scripts
+{
+    <script type="text/javascript">
+        var model = @Html.Raw(Json.Encode(Model));
+        
+        $(function () {
+            ko.applyBindings(model);
+        });
+    </script>
+}

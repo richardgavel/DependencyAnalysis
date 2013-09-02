@@ -3,7 +3,7 @@ using Neo4jClient;
 
 namespace Analyzer.Model.Relationships
 {
-    public class AssemblyReferencesAssembly : Relationship, IRelationshipAllowingSourceNode<Assembly>, IRelationshipAllowingTargetNode<Assembly>
+    public class AssemblyReferencesAssembly : AbstractReferencesRelationship, IRelationshipAllowingSourceNode<Assembly>, IRelationshipAllowingTargetNode<Assembly>
     {
         public const string TypeKey = "ASSEMBLY_REFERENCES_ASSEMBLY";
 

@@ -1,4 +1,5 @@
-﻿using Analyzer.Model.Relationships;
+﻿using System.Linq;
+using Analyzer.Model.Relationships;
 using Neo4jClient;
 using System;
 using System.Reflection;
@@ -8,36 +9,30 @@ namespace Analyzer.Reflection.Visitors
 {
     public class InterfaceVisitor
     {
-        private GraphClient client;
+        private readonly GraphClient _graphClient;
 
         public InterfaceVisitor(GraphClient client)
         {
-            this.client = client;
+            _graphClient = client;
         }
 
         public NodeReference Visit(Type type)
         {
-            const BindingFlags BindingFlags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+            const BindingFlags bindingFlags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
 
-            var classNode = client.Create(new Nodes.Interface
+            var classNode = _graphClient.Create(new Nodes.Interface
             {
                 Id = type.Name,
                 Name = type.Name
             });
 
-            var propertyVisitor = new PropertyVisitor(client);
-            foreach (var property in type.GetProperties(BindingFlags))
-            {
-                var propertyNode = propertyVisitor.Visit(property);
-                client.CreateRelationship(classNode, new InterfaceContainsProperty(propertyNode));
-            }
+            var propertyVisitor = new PropertyVisitor(_graphClient);
+            foreach (var propertyNode in type.GetProperties(bindingFlags).Select(propertyVisitor.Visit))
+                _graphClient.CreateRelationship(classNode, new InterfaceContainsProperty(propertyNode));
 
-            var methodVisitor = new MethodVisitor(client);
-            foreach (var method in type.GetMethods(BindingFlags))
-            {
-                var methodNode = methodVisitor.Visit(method);
-                client.CreateRelationship(classNode, new InterfaceContainsMethod(methodNode));
-            }
+            var methodVisitor = new MethodVisitor(_graphClient);
+            foreach (var methodNode in type.GetMethods(bindingFlags).Select(methodVisitor.Visit))
+                _graphClient.CreateRelationship(classNode, new InterfaceContainsMethod(methodNode));
 
             return classNode;
         }

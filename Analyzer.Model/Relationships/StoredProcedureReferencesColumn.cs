@@ -3,7 +3,7 @@ using Neo4jClient;
 
 namespace Analyzer.Model.Relationships
 {
-    public class StoredProcedureReferencesColumn : Relationship, IRelationshipAllowingSourceNode<StoredProcedure>, IRelationshipAllowingTargetNode<Column>
+    public class StoredProcedureReferencesColumn : AbstractReferencesRelationship, IRelationshipAllowingSourceNode<StoredProcedure>, IRelationshipAllowingTargetNode<Column>
     {
         public const string TypeKey = "STOREDPROCEDURE_REFERENCES_COLUMN";
 

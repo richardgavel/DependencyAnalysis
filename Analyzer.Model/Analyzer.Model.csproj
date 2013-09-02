@@ -61,6 +61,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Nodes\Assembly.cs" />
+    <Compile Include="Nodes\BizTalkApplication.cs" />
+    <Compile Include="Nodes\BizTalkReceiveLocation.cs" />
+    <Compile Include="Nodes\BizTalkServer.cs" />
     <Compile Include="Nodes\Class.cs" />
     <Compile Include="Nodes\Column.cs" />
     <Compile Include="Nodes\ReportServer.cs" />
@@ -84,6 +87,13 @@
     <Compile Include="Relationships\ClassImplementsInterface.cs" />
     <Compile Include="Relationships\ClassReferencesStoredProcedure.cs" />
     <Compile Include="Relationships\AssemblyReferencesAssembly.cs" />
+    <Compile Include="Relationships\AbstractContainsRelationship.cs" />
+    <Compile Include="Relationships\AbstractReferencesRelationship.cs" />
+    <Compile Include="Relationships\BizTalkServerContainsBizTalkApplication.cs" />
+    <Compile Include="Relationships\BizTalkServerContainsBizTalkReceiveLocation.cs" />
+    <Compile Include="Relationships\RootContainsBizTalkServer.cs" />
+    <Compile Include="Relationships\StoredProcedureReferencesTable.cs" />
+    <Compile Include="Relationships\RelationshipPayload.cs" />
     <Compile Include="Relationships\TableReplicatesToTable.cs" />
     <Compile Include="Relationships\MethodInvokesStoredProcedure.cs" />
     <Compile Include="Relationships\MethodInvokesMethod.cs" />

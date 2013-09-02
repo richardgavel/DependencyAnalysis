@@ -9,21 +9,23 @@ namespace Analyzer.Reflection.Visitors
 {
     public class AssemblyVisitor
     {
-        private GraphClient client;
+        private readonly GraphClient _graphClient;
 
         public AssemblyVisitor(GraphClient client)
         {
-            this.client = client;
+            _graphClient = client;
         }
 
         public NodeReference Visit(string path)
         {
-            return Visit(Assembly.LoadFrom(path));
+            return Visit(Assembly.ReflectionOnlyLoadFrom(path));
         }
 
         public NodeReference Visit(Assembly assembly)
         {
-            var assemblyNode = client.Create(new Nodes.Assembly
+            Console.WriteLine("Discovered assembly {0}", assembly.FullName);
+
+            var assemblyNode = _graphClient.Create(new Nodes.Assembly
             {
                 Id = assembly.FullName,
                 Name = assembly.GetName().Name
@@ -40,19 +42,13 @@ namespace Analyzer.Reflection.Visitors
                 types = ex.Types;
             }
 
-            var classVisitor = new ClassVisitor(client);
-            foreach (var @class in types.Where(x => x != null && x.IsClass))
-            {
-                var classNode = classVisitor.Visit(@class);
-                client.CreateRelationship(assemblyNode, new AssemblyContainsClass(classNode));
-            }
+            var classVisitor = new ClassVisitor(_graphClient);
+            foreach (var classNode in types.Where(x => x != null && x.IsClass).Select(classVisitor.Visit))
+                _graphClient.CreateRelationship(assemblyNode, new AssemblyContainsClass(classNode));
 
-            var interfaceVisitor = new InterfaceVisitor(client);
-            foreach (var @interface in types.Where(x => x != null && x.IsInterface))
-            {
-                var interfaceNode = interfaceVisitor.Visit(@interface);
-                client.CreateRelationship(assemblyNode, new AssemblyContainsInterface(interfaceNode));
-            }
+            var interfaceVisitor = new InterfaceVisitor(_graphClient);
+            foreach (var interfaceNode in types.Where(x => x != null && x.IsInterface).Select(interfaceVisitor.Visit))
+                _graphClient.CreateRelationship(assemblyNode, new AssemblyContainsInterface(interfaceNode));
 
             return assemblyNode;
         }

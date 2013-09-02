@@ -3,7 +3,7 @@ using Neo4jClient;
 
 namespace Analyzer.Model.Relationships
 {
-    public class ClassContainsProperty : Relationship, IRelationshipAllowingSourceNode<Class>, IRelationshipAllowingTargetNode<Property>
+    public class ClassContainsProperty : AbstractContainsRelationship, IRelationshipAllowingSourceNode<Class>, IRelationshipAllowingTargetNode<Property>
     {
         public const string TypeKey = "CLASS_CONTAINS_PROPERTY";
 

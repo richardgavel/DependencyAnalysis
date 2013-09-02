@@ -1,5 +1,6 @@
 ﻿using Microsoft.SqlServer.Dac.Model;
 using Neo4jClient;
+using System;
 using Nodes = Analyzer.Model.Nodes;
 
 namespace Analyzer.Database.Visitors
@@ -15,6 +16,8 @@ namespace Analyzer.Database.Visitors
 
         public NodeReference Visit(TSqlObject view)
         {
+            Console.WriteLine("Discovered view {0}", view.Name);
+
             var viewNode = _graphClient.Create(new Nodes.View
             {
                 Id = view.Name.ToString(),

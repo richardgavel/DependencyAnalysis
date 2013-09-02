@@ -3,7 +3,7 @@ using Neo4jClient;
 
 namespace Analyzer.Model.Relationships
 {
-    public class ClassContainsField : Relationship, IRelationshipAllowingSourceNode<Class>, IRelationshipAllowingTargetNode<Field>
+    public class ClassContainsField : AbstractContainsRelationship, IRelationshipAllowingSourceNode<Class>, IRelationshipAllowingTargetNode<Field>
     {
         public const string TypeKey = "CLASS_CONTAINS_FIELD";
 

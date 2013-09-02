@@ -3,7 +3,7 @@ using Neo4jClient;
 
 namespace Analyzer.Model.Relationships
 {
-    public class ReportServerContainsReport : Relationship, IRelationshipAllowingSourceNode<ReportServer>, IRelationshipAllowingTargetNode<Report>
+    public class ReportServerContainsReport : AbstractContainsRelationship, IRelationshipAllowingSourceNode<ReportServer>, IRelationshipAllowingTargetNode<Report>
     {
         public const string TypeKey = "REPORTSERVER_CONTAINS_REPORT";
 

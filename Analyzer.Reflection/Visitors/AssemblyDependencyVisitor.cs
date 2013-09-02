@@ -1,6 +1,5 @@
 ﻿using Analyzer.Model.Relationships;
 using Neo4jClient;
-using System;
 using System.Linq;
 using System.Reflection;
 using Nodes = Analyzer.Model.Nodes;
@@ -9,7 +8,7 @@ namespace Analyzer.Reflection.Visitors
 {
     public class AssemblyDependencyVisitor
     {
-        private GraphClient _graphClient;
+        private readonly GraphClient _graphClient;
 
         public AssemblyDependencyVisitor(GraphClient graphClient)
         {
@@ -47,10 +46,7 @@ namespace Analyzer.Reflection.Visitors
 
             var results = query.Results.ToList();
 
-            if (results.Count() == 1)
-                return results.First();
-            else
-                return null;
+            return results.Count() == 1 ? results.First() : null;
         }
 
 
@@ -64,10 +60,7 @@ namespace Analyzer.Reflection.Visitors
 
             var results = query.Results.ToList();
 
-            if (results.Count() == 1)
-                return results.First();
-            else
-                return null;
+            return results.Count() == 1 ? results.First() : null;
         }
     }
 }

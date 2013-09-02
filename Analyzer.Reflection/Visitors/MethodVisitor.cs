@@ -7,16 +7,19 @@ namespace Analyzer.Reflection.Visitors
 {
     public class MethodVisitor
     {
-        private GraphClient client;
+        private readonly GraphClient _graphClient;
 
         public MethodVisitor(GraphClient client)
         {
-            this.client = client;
+            _graphClient = client;
         }
 
         public NodeReference Visit(MethodInfo method)
         {
-            return client.Create(new Nodes.Method
+            if (method.DeclaringType != null)
+                Console.WriteLine("Discovered method {0}.{1}", method.DeclaringType.Name, method.Name);
+
+            return _graphClient.Create(new Nodes.Method
             {
                 Id = method.Name,
                 Name = method.Name

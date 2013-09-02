@@ -3,7 +3,7 @@ using Neo4jClient;
 
 namespace Analyzer.Model.Relationships
 {
-    public class ReportInvokesStoredProcedure : Relationship, IRelationshipAllowingSourceNode<Report>, IRelationshipAllowingTargetNode<StoredProcedure>
+    public class ReportInvokesStoredProcedure : AbstractReferencesRelationship, IRelationshipAllowingSourceNode<Report>, IRelationshipAllowingTargetNode<StoredProcedure>
     {
         public const string TypeKey = "REPORT_INVOKES_STOREDPROCEDURE";
 

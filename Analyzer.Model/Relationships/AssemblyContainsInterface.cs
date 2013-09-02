@@ -3,7 +3,7 @@ using Neo4jClient;
 
 namespace Analyzer.Model.Relationships
 {
-    public class AssemblyContainsInterface : Relationship, IRelationshipAllowingSourceNode<Assembly>, IRelationshipAllowingTargetNode<Interface>
+    public class AssemblyContainsInterface : AbstractContainsRelationship, IRelationshipAllowingSourceNode<Assembly>, IRelationshipAllowingTargetNode<Interface>
     {
         public const string TypeKey = "ASSEMBLY_CONTAINS_INTERFACE";
 

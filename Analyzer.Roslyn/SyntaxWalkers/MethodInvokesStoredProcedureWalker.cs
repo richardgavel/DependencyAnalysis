@@ -30,14 +30,28 @@ namespace Analyzer.Roslyn.SyntaxWalkers
                 var memberAccess = (MemberAccessExpressionSyntax)node.Left;
                 if (memberAccess.Name.Identifier.ValueText == "CommandText")
                 {
-                    /// TODO: Cover where node.Right is a reference to a constant field
-                    if (node.Right is LiteralExpressionSyntax)
+                    var right = node.Right as LiteralExpressionSyntax;
+                    if (right != null)
                     {
-                        var literalExpression = (LiteralExpressionSyntax)node.Right;
+                        var literalExpression = right;
                         var storedProcedureName = literalExpression.Token.ValueText;
                         var parent = node.Ancestors().First(x => x is MethodDeclarationSyntax);
                         var source = _semanticModel.GetDeclaredSymbol(parent);
+
                         CreateMethodInvokesStoredProcedureRelationship(source, storedProcedureName);
+                    }
+                    else if (node.Right is IdentifierNameSyntax)
+                    {
+                        var constantValue =  _semanticModel.GetConstantValue(node.Right);
+
+                        if (constantValue.HasValue)
+                        {
+                            var storedProcedureName = (string)constantValue.Value;
+                            var parent = node.Ancestors().First(x => x is MethodDeclarationSyntax);
+                            var source = _semanticModel.GetDeclaredSymbol(parent);
+
+                            CreateMethodInvokesStoredProcedureRelationship(source, storedProcedureName);
+                        }
                     }
                 }
             }
@@ -54,11 +68,12 @@ namespace Analyzer.Roslyn.SyntaxWalkers
                 if (target.Symbol.Name == "SetCommandType")
                 {
                     var commandTypeParameter = node.ArgumentList.Arguments[1].Expression as MemberAccessExpressionSyntax;
-                    if (commandTypeParameter.Name.Identifier.ValueText == "StoredProcedure")
+                    if (commandTypeParameter != null && commandTypeParameter.Name.Identifier.ValueText == "StoredProcedure")
                     {
                         var storedProcedureName = _semanticModel.GetConstantValue(node.ArgumentList.Arguments[2].Expression).Value.ToString();
                         var parent = node.Ancestors().First(x => x is MethodDeclarationSyntax);
                         var source = _semanticModel.GetDeclaredSymbol(parent);
+
                         CreateMethodInvokesStoredProcedureRelationship(source, storedProcedureName);
                     }
                 }
@@ -76,15 +91,12 @@ namespace Analyzer.Roslyn.SyntaxWalkers
             var query = _graphClient.Cypher
                 .Start(new { root = _graphClient.RootNode })
                 .Match("root-[:ROOT_CONTAINS_ASSEMBLY]->assembly-[:ASSEMBLY_CONTAINS_CLASS]->class-[:CLASS_CONTAINS_METHOD]->method")
-                .Where(string.Format("class.Id='{0}' AND method.Id='{1}'", symbol.ContainingType.ToString(), symbol.Name))
+                .Where(string.Format("class.Id='{0}' AND method.Id='{1}'", symbol.ContainingType, symbol.Name))
                 .Return<Node<Method>>("method");
 
             var results = query.Results.ToList();
 
-            if (results.Count() == 1)
-                return results.First();
-            else
-                return null;
+            return results.Count() == 1 ? results.First() : null;
         }
 
         public Node<StoredProcedure> GetStoredProcedureNode(string storedProcedureName)
@@ -97,10 +109,7 @@ namespace Analyzer.Roslyn.SyntaxWalkers
 
             var results = query.Results.ToList();
 
-            if (results.Count() == 1)
-                return results.First();
-            else
-                return null;
+            return results.Count() == 1 ? results.First() : null;
         }
 
         private void CreateMethodInvokesStoredProcedureRelationship(ISymbol source, string target)
@@ -108,9 +117,10 @@ namespace Analyzer.Roslyn.SyntaxWalkers
             var sourceNode = GetMethodNode(source);
             var targetNode = GetStoredProcedureNode(target);
 
-            if ((sourceNode != null) && (targetNode != null))
-                _graphClient.CreateRelationship(sourceNode.Reference, new MethodInvokesStoredProcedure(targetNode.Reference));
+            if ((sourceNode == null) || (targetNode == null)) return;
 
+            Console.WriteLine("Discovered dependendency between {0} and {1}", sourceNode.Data.Id, targetNode.Data.Id);
+            _graphClient.CreateRelationship(sourceNode.Reference, new MethodInvokesStoredProcedure(targetNode.Reference));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
 using Analyzer.Model.Relationships;
 using Microsoft.SqlServer.Dac.Model;
 using Neo4jClient;
@@ -27,25 +27,16 @@ namespace Analyzer.Database.Visitors
             var model = new TSqlModel(databasePackagePath);
 
             var tableVisitor = new TableVisitor(_graphClient);
-            Parallel.ForEach(model.GetObjects(DacQueryScopes.All, ModelSchema.Table), table =>
-                {
-                    var tableNode = tableVisitor.Visit(table);
-                    _graphClient.CreateRelationship(databaseNode, new DatabaseContainsTable(tableNode));
-                });
+            foreach (var tableNode in model.GetObjects(DacQueryScopes.All, ModelSchema.Table).Select(tableVisitor.Visit))
+                _graphClient.CreateRelationship(databaseNode, new DatabaseContainsTable(tableNode));
 
             var storedProcedureVisitor = new StoredProcedureVisitor(_graphClient);
-            Parallel.ForEach(model.GetObjects(DacQueryScopes.All, ModelSchema.Procedure), storedProcedure =>
-                {
-                    var storedProcedureNode = storedProcedureVisitor.Visit(storedProcedure);
-                    _graphClient.CreateRelationship(databaseNode, new DatabaseContainsStoredProcedure(storedProcedureNode));
-                });
+            foreach (var storedProcedureNode in model.GetObjects(DacQueryScopes.All, ModelSchema.Procedure).Select(storedProcedureVisitor.Visit))
+                _graphClient.CreateRelationship(databaseNode, new DatabaseContainsStoredProcedure(storedProcedureNode));
 
             var viewVisitor = new ViewVisitor(_graphClient);
-            Parallel.ForEach(model.GetObjects(DacQueryScopes.All, ModelSchema.View), view =>
-                {
-                    var viewNode = viewVisitor.Visit(view);
-                    _graphClient.CreateRelationship(databaseNode, new DatabaseContainsView(viewNode));
-                });
+            foreach (var viewNode in model.GetObjects(DacQueryScopes.All, ModelSchema.View).Select(viewVisitor.Visit))
+                _graphClient.CreateRelationship(databaseNode, new DatabaseContainsView(viewNode));
 
             return databaseNode;
         }

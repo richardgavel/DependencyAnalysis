@@ -3,7 +3,7 @@ using Neo4jClient;
 
 namespace Analyzer.Model.Relationships
 {
-    public class TableReplicatesToTable : Relationship, IRelationshipAllowingSourceNode<Table>, IRelationshipAllowingTargetNode<Table>
+    public class TableReplicatesToTable : AbstractReferencesRelationship, IRelationshipAllowingSourceNode<Table>, IRelationshipAllowingTargetNode<Table>
     {
         public const string TypeKey = "TABLE_REPLICATESTO_TABLE";
 

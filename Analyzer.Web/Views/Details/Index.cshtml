@@ -1,0 +1,43 @@
+﻿<div>
+    <img style="align-content: center; width: 100px" src="~/Content/EchoCodeWeb.png" />
+    <h1 class="title">Echo Code Web</h1>
+</div>
+
+<h1 data-bind="text: Target.FriendlyId" />
+
+<h2 class="category">Ancestry</h2>
+
+<div data-bind="foreach: Ancestry">
+    <a data-bind="attr: { href: '/Details/Index/' + Id }"><span data-bind="text: Name" /></a>
+    <span>&nbsp;&gt;&nbsp;</span>
+</div>
+
+<h2 class="category">Contains</h2>
+
+<div data-bind="foreach: Contains">
+    <a data-bind="attr: { href: '/Details/Index/' + Id }"><span data-bind="text: Type + ' : ' + Name" /></a><br />
+</div>
+
+<h2 class="category">References</h2>
+
+<div data-bind="foreach: References">
+    <a data-bind="attr: { href: '/Details/Index/' + Id }"><span data-bind="text: Type + ' : ' + Name" /></a><br />
+</div>
+
+<h2 class="category">Referenced By</h2>
+
+<div data-bind="foreach: ReferencedBy">
+    <a data-bind="attr: { href: '/Details/Index/' + Id }"><span data-bind="text: Type + ' : ' + Name" /></a><br />
+</div>
+
+
+@section Scripts
+{
+    <script type="text/javascript">
+        var model = @Html.Raw(Json.Encode(Model));
+        
+        $(function () {
+            ko.applyBindings(model);
+        });
+    </script>
+}

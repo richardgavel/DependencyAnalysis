@@ -3,7 +3,7 @@ using Neo4jClient;
 
 namespace Analyzer.Model.Relationships
 {
-    public class ClassImplementsInterface : Relationship, IRelationshipAllowingSourceNode<Class>, IRelationshipAllowingTargetNode<Interface>
+    public class ClassImplementsInterface : AbstractReferencesRelationship, IRelationshipAllowingSourceNode<Class>, IRelationshipAllowingTargetNode<Interface>
     {
         public const string TypeKey = "CLASS_IMPLEMENTS_INTERFACE";
 

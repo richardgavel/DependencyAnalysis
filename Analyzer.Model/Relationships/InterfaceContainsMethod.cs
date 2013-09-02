@@ -3,7 +3,7 @@ using Neo4jClient;
 
 namespace Analyzer.Model.Relationships
 {
-    public class InterfaceContainsMethod : Relationship, IRelationshipAllowingSourceNode<Interface>, IRelationshipAllowingTargetNode<Method>
+    public class InterfaceContainsMethod : AbstractContainsRelationship, IRelationshipAllowingSourceNode<Interface>, IRelationshipAllowingTargetNode<Method>
     {
         public const string TypeKey = "INTERFACE_CONTAINS_METHOD";
 

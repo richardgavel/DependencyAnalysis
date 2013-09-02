@@ -7,16 +7,19 @@ namespace Analyzer.Reflection.Visitors
 {
     public class PropertyVisitor
     {
-        private GraphClient client;
+        private readonly GraphClient _graphClient;
 
         public PropertyVisitor(GraphClient client)
         {
-            this.client = client;
+            _graphClient = client;
         }
 
         public NodeReference Visit(PropertyInfo property)
         {
-            return client.Create(new Nodes.Property
+            if (property.DeclaringType != null)
+                Console.WriteLine("Discovered property {0}.{1}", property.DeclaringType.Name, property.Name);
+
+            return _graphClient.Create(new Nodes.Property
             {
                 Id = property.Name,
                 Name = property.Name

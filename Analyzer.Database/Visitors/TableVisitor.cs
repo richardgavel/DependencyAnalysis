@@ -1,6 +1,8 @@
-﻿using Analyzer.Model.Relationships;
+﻿using System.Threading.Tasks;
+using Analyzer.Model.Relationships;
 using Microsoft.SqlServer.Dac.Model;
 using Neo4jClient;
+using System;
 using Nodes = Analyzer.Model.Nodes;
 
 namespace Analyzer.Database.Visitors
@@ -16,6 +18,8 @@ namespace Analyzer.Database.Visitors
 
         public NodeReference Visit(TSqlObject table)
         {
+            Console.WriteLine("Discovered table {0}", table.Name);
+
             var tableNode = _graphClient.Create(new Nodes.Table
             {
                 Id = table.Name.ToString(),
@@ -23,11 +27,11 @@ namespace Analyzer.Database.Visitors
             });
 
             var columnVisitor = new ColumnVisitor(_graphClient);
-            foreach (var column in table.GetChildren())
+            Parallel.ForEach(table.GetChildren(), column =>
             {
                 var columnNode = columnVisitor.Visit(column);
                 _graphClient.CreateRelationship(tableNode, new TableContainsColumn(columnNode));
-            }
+            });
 
             return tableNode;
         }

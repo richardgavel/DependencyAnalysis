@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Analyzer.Database.Visitors;
+﻿using Analyzer.Database.Visitors;
 using Analyzer.Model.Nodes;
 using Analyzer.Model.Relationships;
 using Analyzer.Reflection.Visitors;
 using Analyzer.Reports.Visitors;
+using Analyzer.Roslyn.Visitors;
 using Neo4jClient;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace Analyzer.Console
 {
@@ -23,29 +24,22 @@ namespace Analyzer.Console
 
             GraphClient.Connect();
 
-            if (arguments.ContainsKey("dacpacs"))
-            {
-                var databaseVisitor = new DatabaseVisitor(GraphClient);
-                var databaseServerNode = GetDatabaseServerNode(arguments["server"]);
-
-                var directory = new DirectoryInfo(arguments["dacpacs"]);
-                foreach (var dacpacPath in directory.EnumerateFiles("*.dacpac"))
-                    GraphClient.CreateRelationship(databaseServerNode, new DatabaseServerContainsDatabase(databaseVisitor.Visit(dacpacPath.FullName)));
-            }
-            else if (arguments.ContainsKey("dacpac"))
+            if (arguments.ContainsKey("dacpac"))
             {
                 var databaseVisitor = new DatabaseVisitor(GraphClient);
                 var databaseServerNode = GetDatabaseServerNode(arguments["server"]);
 
                 GraphClient.CreateRelationship(databaseServerNode, new DatabaseServerContainsDatabase(databaseVisitor.Visit(arguments["dacpac"])));
             }
-            else if (arguments.ContainsKey("assemblies"))
+            else if (arguments.ContainsKey("dacpac-references"))
+            {
+                var storedProcedureDependencyVisitor = new StoredProcedureDependencyVisitor(GraphClient);
+                storedProcedureDependencyVisitor.Visit(arguments["dacpac-references"]);
+            }
+            else if (arguments.ContainsKey("assembly"))
             {
                 var assemblyVisitor = new AssemblyVisitor(GraphClient);
-
-                var directory = new DirectoryInfo(arguments["assemblies"]);
-                foreach (var assemblyNode in directory.EnumerateFiles("*.dll").Select(assembly => assemblyVisitor.Visit(assembly.FullName)))
-                    GraphClient.CreateRelationship(GraphClient.RootNode, new RootContainsAssembly(assemblyNode));
+                GraphClient.CreateRelationship(GraphClient.RootNode, new RootContainsAssembly(assemblyVisitor.Visit(arguments["assembly"])));
             }
             else if (arguments.ContainsKey("reports"))
             {
@@ -55,6 +49,11 @@ namespace Analyzer.Console
                 var directory = new DirectoryInfo(arguments["reports"]);
                 foreach (var report in directory.EnumerateFiles("*.rdl"))
                     GraphClient.CreateRelationship(reportServerNode, new ReportServerContainsReport(reportVisitor.Visit(report.FullName)));
+            }
+            else if (arguments.ContainsKey("dotnet"))
+            {
+                var projectVisitor = new DotNetProjectVisitor(GraphClient);
+                projectVisitor.Visit(arguments["dotnet"]);
             }
         }
 
