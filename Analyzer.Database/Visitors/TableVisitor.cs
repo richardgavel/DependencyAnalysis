@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Analyzer.Model.Relationships;
 using Microsoft.SqlServer.Dac.Model;
 using Neo4jClient;
@@ -27,11 +28,8 @@ namespace Analyzer.Database.Visitors
             });
 
             var columnVisitor = new ColumnVisitor(_graphClient);
-            Parallel.ForEach(table.GetChildren(), column =>
-            {
-                var columnNode = columnVisitor.Visit(column);
+            foreach (var columnNode in table.GetChildren().Select(columnVisitor.Visit))
                 _graphClient.CreateRelationship(tableNode, new TableContainsColumn(columnNode));
-            });
 
             return tableNode;
         }
