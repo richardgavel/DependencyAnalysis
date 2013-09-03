@@ -35,10 +35,11 @@ namespace Analyzer.Reports.Visitors
             foreach (var storedProcedureName in storedProcedureNames)
             {
                 var fullyQualifiedStoredProcedureName = string.Format("[dbo].[{0}]", storedProcedureName);
+
                 var storedProcedureQuery = _graphClient.Cypher
                     .Start(new { root = _graphClient.RootNode })
                     .Match("root-[:ROOT_CONTAINS_DATABASESERVER]->databaseServer-[:DATABASESERVER_CONTAINS_DATABASE]->database-[:DATABASE_CONTAINS_STOREDPROCEDURE]->storedprocedure")
-                    .Where("storedprocedure.Id = '" + fullyQualifiedStoredProcedureName + "'")
+                    .Where((StoredProcedure storedprocedure) => storedprocedure.Id == fullyQualifiedStoredProcedureName)
                     .Return<Node<StoredProcedure>>("storedprocedure");
 
                 var results = storedProcedureQuery.Results.ToList();
