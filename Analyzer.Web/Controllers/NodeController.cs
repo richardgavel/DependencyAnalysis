@@ -23,11 +23,11 @@ namespace Analyzer.Web.Controllers
 
         public ResultModel Get(long id)
         {
-            if (Cache.ContainsKey(id))
-                return Cache[id];
+            //if (Cache.ContainsKey(id))
+            //    return Cache[id];
 
             var result = GetResultModel(id);
-            Cache.Add(id, result);
+            //Cache.Add(id, result);
             return result;
         }
 
