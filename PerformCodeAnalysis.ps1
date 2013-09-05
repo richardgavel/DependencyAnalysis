@@ -108,6 +108,7 @@ $DotNetSubversionPaths =
 $ReportPaths =
 	"C:\Echo Development\Analyzer Artifacts\RDL"
 
+
 $DB01Dacpacs | % {
 	"Analyzing $_ for node discovery"
     &$AnalysisConsole -dacpac "$RootDacpacPath\$_" -server "DB01VPRD"
@@ -126,48 +127,4 @@ $DB02Dacpacs | % {
 $DB02Dacpacs | % {
 	"Analyzing $_ for reference relationships"
     &$AnalysisConsole -dacpac-references "$RootDacpacPath\$_" -server "DB02VPRD"
-}
-
-$ReportPaths | % {
-	"Analyzing $_ for reports"
-    &$AnalysisConsole -reports "$_" -server "FRS"
-}
-
-$AssembliesThirdParty | % {
-	"Analyzing $_"
-    &$AnalysisConsole -assembly "$RootAssembliesThirdPartyPath\$_"
-}
-
-$Assemblies | % {
-	"Analyzing $_"
-    &$AnalysisConsole -assembly "$RootAssemblyPath\$_"
-}
-
-$PackagedAssemblies | % {
-	$Package = $_.Split(':')[0]
-	$Assembly = $_.Split(':')[1]
-	
-	$LastestPackage = Get-ChildItem "RootPackagePath:\$Package" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-
-	"Expanding $($LastestPackage.Name) to local"
-	$ExtractDirectory = New-Item -Path $("C:\Temp\$($LastestPackage.Name)") -Type Directory
-	Expand-Archive -Path $LastestPackage.FullName -OutputPath $ExtractDirectory.FullName
-	
-	"Analyzing $Assembly"
-	&$AnalysisConsole -assembly "$($ExtractDirectory.FullName)\$Assembly"
-}
-
-$DotNetSubversionPaths | % {
-	$SourceDirectory = $_.Split('/')[0]
-	if (Test-Path $SourceDirectory) {
-		Remove-Item -Recurse -Force $SourceDirectory
-	}
-	
-	"Getting source for $_"
-	&$Svn export --quiet --username $SubversionUsername --password $SubversionPassword "$SubversionRootUrl/$_" $SourceDirectory
-	
-	Get-ChildItem "$SourceDirectory\*.csproj" | % {
-		"Analyzing $_"
-		&$AnalysisConsole -dotnet "$_"
-	}
 }

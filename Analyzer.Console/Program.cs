@@ -35,6 +35,9 @@ namespace Analyzer.Console
             {
                 var storedProcedureDependencyVisitor = new StoredProcedureDependencyVisitor(GraphClient);
                 storedProcedureDependencyVisitor.Visit(arguments["dacpac-references"]);
+
+                var viewDependencyVisitor = new ViewDependencyVisitor(GraphClient);
+                viewDependencyVisitor.Visit(arguments["dacpac-references"]);
             }
             else if (arguments.ContainsKey("assembly"))
             {

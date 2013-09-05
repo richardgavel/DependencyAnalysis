@@ -43,12 +43,14 @@ namespace Analyzer.Database.Visitors
 
                     if ((storedProcedureNode == null) || (tableNode == null)) continue;
 
-                    Console.WriteLine("Discovered dependency between stored procedure {0} and table {1}", storedProcedureNode.Data.Id, tableNode.Data.Id);
+                    if (RelationshipExists(storedProcedureNode.Reference, tableNode.Reference)) continue;
+
+                    Console.WriteLine("Creating dependency between stored procedure {0} and table {1}", storedProcedureNode.Data.Id, tableNode.Data.Id);
                     _graphClient.CreateRelationship(storedProcedureNode.Reference, new StoredProcedureReferencesTable(tableNode.Reference));
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
+                    Console.WriteLine("Error analyzing {0}: {1}", storedProcedure.Name.ToString(), ex);
                 }
             }
 
@@ -60,12 +62,14 @@ namespace Analyzer.Database.Visitors
 
                     if ((storedProcedureNode == null) || (columnNode == null)) continue;
 
-                    Console.WriteLine("Discovered dependency between stored procedure {0} and column {1}", storedProcedureNode.Data.Id, columnNode.Data.Id);
+                    if (RelationshipExists(storedProcedureNode.Reference, columnNode.Reference)) continue;
+
+                    Console.WriteLine("Creating dependency between stored procedure {0} and column {1}", storedProcedureNode.Data.Id, columnNode.Data.Id);
                     _graphClient.CreateRelationship(storedProcedureNode.Reference, new StoredProcedureReferencesColumn(columnNode.Reference));
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
+                    Console.WriteLine("Error analyzing {0}: {1}", storedProcedure.Name.ToString(), ex);
                 }
             }
 
@@ -75,23 +79,51 @@ namespace Analyzer.Database.Visitors
 
             foreach (Match match in FromRegex.Matches(script))
             {
-                var tableNode = GetTableNode(databaseNode, string.Format("[dbo].[{0}]", match.Groups["table"].Value));
+                try
+                {
+                    var tableNode = GetTableNode(databaseNode, string.Format("[dbo].[{0}]", match.Groups["table"].Value));
 
-                if ((storedProcedureNode == null) || (tableNode == null)) continue;
+                    if ((storedProcedureNode == null) || (tableNode == null)) continue;
 
-                Console.WriteLine("Discovered dependency between stored procedure {0} and table {1} (dynamic SQL)", storedProcedureNode.Data.Id, tableNode.Data.Id);
-                _graphClient.CreateRelationship(storedProcedureNode.Reference, new StoredProcedureReferencesTable(tableNode.Reference));
+                    if (RelationshipExists(storedProcedureNode.Reference, tableNode.Reference)) continue;
+
+                    Console.WriteLine("Creating dependency between stored procedure {0} and table {1} (dynamic SQL)", storedProcedureNode.Data.Id, tableNode.Data.Id);
+                    _graphClient.CreateRelationship(storedProcedureNode.Reference, new StoredProcedureReferencesTable(tableNode.Reference));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error analyzing {0}: {1}", storedProcedure.Name.ToString(), ex);
+                }
             }
 
             foreach (Match match in JoinRegex.Matches(script))
             {
-                var tableNode = GetTableNode(databaseNode, string.Format("[dbo].[{0}]", match.Groups["table"].Value));
+                try
+                {
+                    var tableNode = GetTableNode(databaseNode, string.Format("[dbo].[{0}]", match.Groups["table"].Value));
 
-                if ((storedProcedureNode == null) || (tableNode == null)) continue;
+                    if ((storedProcedureNode == null) || (tableNode == null)) continue;
 
-                Console.WriteLine("Discovered dependency between stored procedure {0} and table {1} (dynamic SQL)", storedProcedureNode.Data.Id, tableNode.Data.Id);
-                _graphClient.CreateRelationship(storedProcedureNode.Reference, new StoredProcedureReferencesTable(tableNode.Reference));
+                    if (RelationshipExists(storedProcedureNode.Reference, tableNode.Reference)) continue;
+
+                    Console.WriteLine("Creating dependency between stored procedure {0} and table {1} (dynamic SQL)", storedProcedureNode.Data.Id, tableNode.Data.Id);
+                    _graphClient.CreateRelationship(storedProcedureNode.Reference, new StoredProcedureReferencesTable(tableNode.Reference));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error analyzing {0}: {1}", storedProcedure.Name.ToString(), ex);
+                }
             }
+        }
+
+        private bool RelationshipExists(IAttachedReference sourceNodeReference, IAttachedReference targetNodeReference)
+        {
+            var query = _graphClient.Cypher
+                .Start(new {source = sourceNodeReference, target = targetNodeReference})
+                .Where("source-->target")
+                .Return<object>("target");
+
+            return query.Results.Any();
         }
 
         private Node<Nodes.Database> GetDatabaseNode(string databasePackagePath)
@@ -99,7 +131,7 @@ namespace Analyzer.Database.Visitors
             var databasePackageName = Path.GetFileNameWithoutExtension(databasePackagePath);
 
             var query = _graphClient.Cypher
-                .Start(new {root = _graphClient.RootNode})
+                .Start(new { root = _graphClient.RootNode })
                 .Match("root-[:ROOT_CONTAINS_DATABASESERVER]->databaseserver-[:DATABASESERVER_CONTAINS_DATABASE]->database")
                 .Where((Nodes.Database database) => database.Id == databasePackageName)
                 .Return<Node<Nodes.Database>>("database");
@@ -114,7 +146,7 @@ namespace Analyzer.Database.Visitors
             var query = _graphClient.Cypher
                 .Start(new { database = databaseNode.Reference })
                 .Match("database-[:DATABASE_CONTAINS_TABLE]->table")
-                .Where(string.Format("table.Id =~ '(?i){0}'", tableName))
+                .Where(string.Format("table.Id =~ '(?i){0}'", tableName.Replace("[", "\\\\[").Replace("]", "\\\\]").Replace(".", "\\\\.")))
                 .Return<Node<Nodes.Table>>("table");
 
             var results = query.Results.ToList();
@@ -171,5 +203,5 @@ namespace Analyzer.Database.Visitors
 
             return results.Count == 1 ? results.First() : null;
         }
-}
+    }
 }

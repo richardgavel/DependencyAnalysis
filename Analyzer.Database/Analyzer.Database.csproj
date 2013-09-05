@@ -63,6 +63,8 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Visitors\ColumnVisitor.cs" />
+    <Compile Include="Visitors\FunctionVisitor.cs" />
+    <Compile Include="Visitors\ViewDependencyVisitor.cs" />
     <Compile Include="Visitors\StoredProcedureDependencyVisitor.cs" />
     <Compile Include="Visitors\ViewVisitor.cs" />
     <Compile Include="Visitors\StoredProcedureVisitor.cs" />

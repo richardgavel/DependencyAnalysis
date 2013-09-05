@@ -28,7 +28,7 @@ namespace Analyzer.Database.Visitors
             });
 
             var columnVisitor = new ColumnVisitor(_graphClient);
-            foreach (var columnNode in table.GetChildren().Select(columnVisitor.Visit))
+            foreach (var columnNode in table.GetChildren().Where(x => x.ObjectType == ModelSchema.Column).Select(columnVisitor.Visit))
                 _graphClient.CreateRelationship(tableNode, new TableContainsColumn(columnNode));
 
             return tableNode;

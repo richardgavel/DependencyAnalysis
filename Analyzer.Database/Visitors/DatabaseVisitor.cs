@@ -38,6 +38,10 @@ namespace Analyzer.Database.Visitors
             foreach (var viewNode in model.GetObjects(DacQueryScopes.All, ModelSchema.View).Select(viewVisitor.Visit))
                 _graphClient.CreateRelationship(databaseNode, new DatabaseContainsView(viewNode));
 
+            var userDefinedFunctionVisitor = new UserDefinedFunctionVisitor(_graphClient);
+            foreach (var userDefinedFunctionNode in model.GetObjects(DacQueryScopes.All, ModelSchema.TableValuedFunction, ModelSchema.ScalarFunction).Select(userDefinedFunctionVisitor.Visit))
+                _graphClient.CreateRelationship(databaseNode, new DatabaseContainsUserDefinedFunction(userDefinedFunctionNode));
+
             return databaseNode;
         }
     }
